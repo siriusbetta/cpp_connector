@@ -1,7 +1,7 @@
 
 
 file(GLOB SOURCES "*.cpp")
-add_library(fac_lib SHARED factorial.cpp)
+add_library(fac_lib STATIC factorial.cpp)
 
 add_executable(hello ${SOURCES})
 
