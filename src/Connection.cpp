@@ -1,52 +1,126 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include "Connection.hpp"			
+#include <unistd.h>
+#include <stdio.h>
+#include <string.h>
 
-int main()
+namespace con
 {
 
-	int sock;
-	int listener;
-
-	struct sockaddr_in addr;
-	char buf[1024];
-	int bytes_read;
-
-	listener = socket(AF_INET, SOCK_STREAM, 0);
-	if(listener < 0)
+	Connection::Connection(const char *addr,
+			const char *port) : m_addr(addr), m_port(port) 
 	{
-		perror("socket");
-		exit(1);
-	}
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(3425);
-	addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	if(bind(listener, (struct sockaddr *)&addr, sizeof(addr)) < 0)
-	{
-		perror("bind");
-		exit(2);
+		getAddrInfo();
 	}
 
-	listen(listener, 1);
-
-	while(1)
+	Connection::~Connection()
 	{
-		sock = accept(listener, NULL, NULL);
-		if(sock < 0)
+	}
+
+	int Connection::getAddrInfo()
+	{
+		memset(&hints, 0, sizeof hints);
+
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_flags = AI_PASSIVE;
+		int rv; 
+
+		if( (rv = getaddrinfo(NULL, m_port, &hints, &servinfo)) != 0)
 		{
-			perror("accept");
-			exit(3);
+			fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+			return 1;
+		}
+	}
+
+	int Connection::bindPort()
+	{
+		for(p = servinfo; p != NULL; p -> ai_next)
+		{
+			matchFreeSocket();	
+
+			if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
+			{
+				fprintf(stderr, "setsocket \n");
+				return 1;
+			}
+
+			if(bind(sockfd, p->ai_addr, p->ai_addrlen) == -1)
+			{
+				close(sockfd);
+				fprintf(stderr, "server: bind \n");
+				continue;
+			}
+
+			break;
 		}
 
-		while(1)
-		{
-			bytes_read = recv(sock, buf, 1024, 0);
-			if(bytes_read <= break;
-			send(sock, buf, bytes_read, 0);
-		}
+		freeaddrinfo(servinfo);
 
-		close(sock);
+		if(p == NULL)
+		{
+			fprintf(stderr, "server: failed to bind \n");
+			return 1;
+		}
 	}
 
-	return 0;
+	int Connection::listenPort()
+	{
+		if(listen(sockfd, BACKLOG) == 1)
+		{
+			fprintf(stderr, "listen \n");
+			return 1;
+		}
+	}
+
+	int Connection::acceptConnection()
+	{
+		sin_size = sizeof their_addr;
+		newfd = accept(sockfd, (struct sockaddr *) &their_addr, &sin_size);
+		if(newfd == -1)
+		{
+			fprintf(stderr, "accept \n");
+			return 1;
+		}
+	}
+
+
+	int Connection::Connect()
+	{
+		for(p = servinfo; p != NULL; p -> ai_next)
+		{
+			matchFreeSocket();
+
+			if(connect(sockfd, p->ai_addr, p->ai_addrlen) == -1)
+			{
+				close(sockfd);
+				fprintf(stderr, "connect\n");
+			}	
+
+			break;
+		}
+	}
+
+	int Connection::readData(int socket)
+	{
+		int numbytes;
+		if(recv(socket, readBuf, 1023, 0) == -1)
+			fprintf(stderr, "read\n");
+
+	}
+
+	int Connection:: writeData(int socket)
+	{
+		if(send(socket, "Hello, wordl!", 13, 0) == -1)
+			fprintf(stderr, "send\n");
+	}
+
+	int Connection::matchFreeSocket()
+	{
+		if((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+		{
+			fprintf(stderr, "server: socket \n");
+		}
+	}
+
 }
+
