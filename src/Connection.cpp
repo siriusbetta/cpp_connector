@@ -1,7 +1,10 @@
-#include "Connection.hpp"			
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+
+#include "Connection.hpp"			
+#include "NetworkException.hpp"
 
 namespace con
 {
@@ -16,7 +19,20 @@ namespace con
 	{
 	}
 
-	int Connection::getAddrInfo()
+	Connection::Connection(const Connection & c)
+	{
+		this->m_addr = c.m_addr;
+		this->m_port = c.m_addr;
+	}
+
+	Connection & Connection::operator = (const Connection & c)
+	{
+		this->m_addr = c.m_addr;
+		this->m_port = c.m_addr;
+		return *this;
+	}
+
+	void Connection::getAddrInfo()
 	{
 		memset(&hints, 0, sizeof hints);
 
@@ -27,12 +43,12 @@ namespace con
 
 		if( (rv = getaddrinfo(NULL, m_port, &hints, &servinfo)) != 0)
 		{
-			fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-			return 1;
+			//fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+			throw new NetworkException("getaddrinfo exception");
 		}
 	}
 
-	int Connection::bindPort()
+	void Connection::bindPort()
 	{
 		for(p = servinfo; p != NULL; p -> ai_next)
 		{
@@ -40,8 +56,9 @@ namespace con
 
 			if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
 			{
-				fprintf(stderr, "setsocket \n");
-				return 1;
+				//fprintf(stderr, "setsocket \n");
+				
+				throw new NetworkException("setsockopt exception");	
 			}
 
 			if(bind(sockfd, p->ai_addr, p->ai_addrlen) == -1)
@@ -59,32 +76,49 @@ namespace con
 		if(p == NULL)
 		{
 			fprintf(stderr, "server: failed to bind \n");
-			return 1;
+			throw new NetworkException("server: failed to bind exception");	
 		}
 	}
 
-	int Connection::listenPort()
+	void Connection::listenPort()
 	{
 		if(listen(sockfd, BACKLOG) == 1)
 		{
 			fprintf(stderr, "listen \n");
-			return 1;
+			throw new NetworkException("listen exception");	
 		}
 	}
 
-	int Connection::acceptConnection()
+	Connection Connection::acceptConnection()
 	{
+		char ipstr[INET6_ADDRSTRLEN];
+
 		sin_size = sizeof their_addr;
 		newfd = accept(sockfd, (struct sockaddr *) &their_addr, &sin_size);
 		if(newfd == -1)
 		{
 			fprintf(stderr, "accept \n");
-			return 1;
+			throw new NetworkException("accept exception");	
 		}
+		Connection c;
+		c.sockfd = newfd;
+		c.m_addr = m_addr;
+		c.m_port = m_port;
+		
+		return c;	
 	}
 
+	int Connection::getSocket()
+	{
+		return sockfd;
+	}
 
-	int Connection::Connect()
+	int Connection::getNewSocket()
+	{
+		return newfd;
+	}
+
+	void Connection::Connect()
 	{
 		for(p = servinfo; p != NULL; p -> ai_next)
 		{
@@ -94,24 +128,40 @@ namespace con
 			{
 				close(sockfd);
 				fprintf(stderr, "connect\n");
+				throw new NetworkException("connect exception");	
 			}	
 
 			break;
 		}
 	}
 
-	int Connection::readData(int socket)
+	Data Connection::readData()
 	{
-		int numbytes;
-		if(recv(socket, readBuf, 1023, 0) == -1)
-			fprintf(stderr, "read\n");
+		Data data;
 
+		int numbytes;
+		if( (numbytes = recv(sockfd, readBuf, DATA_SIZE - 1, 0)) == -1)
+		{
+			fprintf(stderr, "read\n");
+		}
+
+		data.putData(readBuf, numbytes);
+		return data;
 	}
 
-	int Connection:: writeData(int socket)
+	int Connection:: writeData(Data data)
 	{
-		if(send(socket, "Hello, wordl!", 13, 0) == -1)
+		char buf[DATA_SIZE];
+
+		int dataLength = data.getData(buf);
+
+		if(send(sockfd, buf, dataLength, 0) == -1)
 			fprintf(stderr, "send\n");
+	}
+
+	int Connection::closeConnection()
+	{
+		close(sockfd);
 	}
 
 	int Connection::matchFreeSocket()
@@ -119,7 +169,30 @@ namespace con
 		if((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
 		{
 			fprintf(stderr, "server: socket \n");
+			throw new NetworkException("socket exception");	
 		}
+	}
+
+	void *Connection::getInAddr(struct sockaddr *sa)
+	{
+
+		if(sa -> sa_family == AF_INET)
+		{
+			return &( ( ( struct sockaddr_in* )sa)->sin_addr);
+		}
+
+		return &( ( ( struct sockaddr_in6* )sa)->sin6_addr);
+	}
+	
+	short Connection::getInPort(struct sockaddr *sa)
+	{
+
+		if(sa -> sa_family == AF_INET)
+		{
+			return ( ( ( struct sockaddr_in* )sa)->sin_port);
+		}
+
+		return ( ( ( struct sockaddr_in6* )sa)->sin6_port);
 	}
 
 }
