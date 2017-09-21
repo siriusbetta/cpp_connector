@@ -138,7 +138,7 @@ namespace con
 	int Connection::readData(char *buffer, size_t buffer_length)
 	{
 		int numbytes;
-		if( (numbytes = recv(sockfd, readBuf, DATA_SIZE - 1, 0)) == -1)
+		if( (numbytes = recv(sockfd, buffer, DATA_SIZE - 1, 0)) == -1)
 		{
 			fprintf(stderr, "read\n");
 			throw NetworkException("read: exception");
@@ -159,7 +159,7 @@ namespace con
 
 	int Connection::writeData(char *buffer, size_t buffer_length)
 	{
-		if(send(sockfd, buffer, data_length, 0) == -1)
+		if(send(sockfd, buffer, buffer_length, 0) == -1)
 		{
 			fprintf(stderr, "send\n");
 			throw NetworkException("write: exception");

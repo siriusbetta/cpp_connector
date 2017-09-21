@@ -9,8 +9,9 @@ int main(int argc, char *argv[])
 	con.Connect();
 
 	Data data = con.readData();
-	
+
 	char ar[1024];
 	data.getData(ar);
+	std::cout << ar << '\n';
 	return 0;
 }

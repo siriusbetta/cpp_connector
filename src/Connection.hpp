@@ -46,7 +46,7 @@ namespace con
 
 			int writeData(Data data);
 
-			itn writeData(char *buffer, size_t buffer_length);
+			int writeData(char *buffer, size_t buffer_length);
 
 			int closeConnection();
 
