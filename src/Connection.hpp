@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 
 #define BACKLOG 5
+#define DATA_SIZE	1024
 
 #include "Data.hpp"
 
@@ -41,7 +42,11 @@ namespace con
 
 			Data readData();
 
+			int readData(char *buffer, size_t buffer_length);
+
 			int writeData(Data data);
+
+			itn writeData(char *buffer, size_t buffer_length);
 
 			int closeConnection();
 
@@ -56,7 +61,7 @@ namespace con
 			void getAddrInfo();
 
 			void *getInAddr(struct sockaddr *sa);
-			
+
 			short getInPort(struct sockaddr *sa);
 
 			int sockfd;
@@ -71,7 +76,6 @@ namespace con
 
 			socklen_t sin_size;
 
-			char readBuf[1024];
 			char writeBuf[1024];
 
 	};
