@@ -50,12 +50,14 @@ namespace con
 
 			int closeConnection();
 
+			bool isConnection();
+
 			int matchFreeSocket();
 
 			const char *m_addr;
 
 			const char *m_port;
-
+    
 		private:
 
 			void getAddrInfo();

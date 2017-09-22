@@ -43,7 +43,6 @@ namespace con
 
 		if( (rv = getaddrinfo(NULL, m_port, &hints, &servinfo)) != 0)
 		{
-			//fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 			throw new NetworkException("getaddrinfo exception");
 		}
 	}
@@ -56,8 +55,6 @@ namespace con
 
 			if(setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
 			{
-				//fprintf(stderr, "setsocket \n");
-
 				throw new NetworkException("setsockopt exception");
 			}
 
@@ -75,7 +72,6 @@ namespace con
 
 		if(p == NULL)
 		{
-			fprintf(stderr, "server: failed to bind \n");
 			throw new NetworkException("server: failed to bind exception");
 		}
 	}
@@ -84,7 +80,6 @@ namespace con
 	{
 		if(listen(sockfd, BACKLOG) == 1)
 		{
-			fprintf(stderr, "listen \n");
 			throw new NetworkException("listen exception");
 		}
 	}
@@ -97,7 +92,6 @@ namespace con
 		newfd = accept(sockfd, (struct sockaddr *) &their_addr, &sin_size);
 		if(newfd == -1)
 		{
-			fprintf(stderr, "accept \n");
 			throw new NetworkException("accept exception");
 		}
 		Connection c;
@@ -127,7 +121,6 @@ namespace con
 			if(connect(sockfd, p->ai_addr, p->ai_addrlen) == -1)
 			{
 				close(sockfd);
-				fprintf(stderr, "connect\n");
 				throw new NetworkException("connect exception");
 			}
 
@@ -140,7 +133,6 @@ namespace con
 		int numbytes;
 		if( (numbytes = recv(sockfd, buffer, DATA_SIZE - 1, 0)) == -1)
 		{
-			fprintf(stderr, "read\n");
 			throw NetworkException("read: exception");
 		}
 		return numbytes;
@@ -161,7 +153,6 @@ namespace con
 	{
 		if(send(sockfd, buffer, buffer_length, 0) == -1)
 		{
-			fprintf(stderr, "send\n");
 			throw NetworkException("write: exception");
 		}
 	}
@@ -178,6 +169,12 @@ namespace con
 	int Connection::closeConnection()
 	{
 		close(sockfd);
+	}
+
+	bool Connection::isConnection()
+	{
+		//TODO Implementation
+		return true;
 	}
 
 	int Connection::matchFreeSocket()
@@ -210,5 +207,4 @@ namespace con
 
 		return ( ( ( struct sockaddr_in6* )sa)->sin6_port);
 	}
-
 }
