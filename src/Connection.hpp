@@ -38,8 +38,6 @@ namespace con
 
 			int getSocket();
 
-			int getNewSocket();
-
 			Data readData();
 
 			int readData(char *buffer, size_t buffer_length);
@@ -49,8 +47,6 @@ namespace con
 			int writeData(char *buffer, size_t buffer_length);
 
 			int closeConnection();
-
-			bool isConnection();
 
 			int matchFreeSocket();
 

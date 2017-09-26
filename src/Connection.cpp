@@ -1,6 +1,10 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
+
 #include <iostream>
 
 #include "Connection.hpp"
@@ -23,12 +27,14 @@ namespace con
 	{
 		this->m_addr = c.m_addr;
 		this->m_port = c.m_addr;
+		this -> sockfd = c.sockfd;
 	}
 
 	Connection & Connection::operator = (const Connection & c)
 	{
 		this->m_addr = c.m_addr;
 		this->m_port = c.m_addr;
+		this -> sockfd = c.sockfd;
 		return *this;
 	}
 
@@ -107,11 +113,6 @@ namespace con
 		return sockfd;
 	}
 
-	int Connection::getNewSocket()
-	{
-		return newfd;
-	}
-
 	void Connection::Connect()
 	{
 		for(p = servinfo; p != NULL; p -> ai_next)
@@ -131,7 +132,7 @@ namespace con
 	int Connection::readData(char *buffer, size_t buffer_length)
 	{
 		int numbytes;
-		if( (numbytes = recv(sockfd, buffer, DATA_SIZE - 1, 0)) == -1)
+		if( (numbytes = recv(sockfd, buffer, buffer_length - 1, 0)) == -1)
 		{
 			throw NetworkException("read: exception");
 		}
@@ -169,12 +170,6 @@ namespace con
 	int Connection::closeConnection()
 	{
 		close(sockfd);
-	}
-
-	bool Connection::isConnection()
-	{
-		//TODO Implementation
-		return true;
 	}
 
 	int Connection::matchFreeSocket()
