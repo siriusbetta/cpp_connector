@@ -8,10 +8,16 @@ int main(int argc, char *argv[])
 	Connection con;
 	con.Connect();
 
-	Data data = con.readData();
+	char *text = "Helllo";
+	int inp = 0;
+	while(inp != 2)
+	{
+		std::cout << "Input some: " << std::endl;
+		con.writeData(text, 6);
+		std::cin >> inp;
+		std::cout << "Inputed : " << inp << std::endl;
+	}
+	con.closeConnection();
 
-	char ar[1024];
-	data.getData(ar);
-	std::cout << ar << '\n';
 	return 0;
 }
